@@ -1,0 +1,77 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 127.0.0.1:4318
+
+processors:
+  batch: {}
+
+  gen_ai_normalizer:
+    sources:
+      - name: openllmetry
+
+  transform/semconv_corrections:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - set(span.attributes["gen_ai.tool.name"], span.attributes["gen_ai.agent.name"]) where span.attributes["gen_ai.operation.name"] == "execute_tool" and span.attributes["gen_ai.tool.name"] == nil and span.attributes["gen_ai.agent.name"] != nil
+          - delete_key(span.attributes, "gen_ai.agent.name") where span.attributes["gen_ai.operation.name"] == "execute_tool"
+          - set(span.attributes["gen_ai.workflow.name"], span.attributes["traceloop.workflow.name"]) where span.attributes["gen_ai.operation.name"] == "invoke_workflow" and span.attributes["traceloop.workflow.name"] != nil
+
+  transform/redact_sensitive_data:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - replace_pattern(span.attributes["gen_ai.tool.call.arguments"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.tool.call.arguments"] != nil
+          - replace_pattern(span.attributes["gen_ai.tool.call.result"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.tool.call.result"] != nil
+          - replace_pattern(span.attributes["gen_ai.input.messages"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.input.messages"] != nil
+          - replace_pattern(span.attributes["gen_ai.output.messages"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.output.messages"] != nil
+          - replace_pattern(span.attributes["traceloop.entity.input"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["traceloop.entity.input"] != nil
+          - replace_pattern(span.attributes["traceloop.entity.output"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["traceloop.entity.output"] != nil
+
+  transform/drop_prompt_content:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(span.attributes, "gen_ai.input.messages")
+          - delete_key(span.attributes, "gen_ai.output.messages")
+          - delete_key(span.attributes, "gen_ai.prompt")
+          - delete_key(span.attributes, "gen_ai.completion")
+          - delete_key(span.attributes, "traceloop.entity.input")
+          - delete_key(span.attributes, "traceloop.entity.output")
+
+  redaction:
+    allow_all_keys: true
+    blocked_key_patterns:
+      - "^password$"
+      - "^secret$"
+      - "^api[_-]?key$"
+      - "^authorization$"
+    summary: info
+
+exporters:
+  otlp:
+    endpoint: 127.0.0.1:4317
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors:
+        [
+          gen_ai_normalizer,
+          transform/semconv_corrections,
+          transform/drop_prompt_content,
+          transform/redact_sensitive_data,
+          redaction,
+          batch,
+        ]
+      exporters: [otlp, debug]

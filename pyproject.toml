@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+testpaths = ["evals"]
+pythonpath = ["."]
+markers = [
+    "integration: requires the agent and shop API to be running",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# The checkout docstring is the tool description recorded in the VCR fixtures.
+"domain/tools.py" = ["E501"]

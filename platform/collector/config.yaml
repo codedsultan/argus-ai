@@ -1,0 +1,89 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+  # OpenLLMetry (Traceloop) emits llm.* / traceloop.* attributes. The
+  # normalizer adds the equivalent gen_ai.* attributes without deleting the
+  # originals, so a trace shows both vocabularies while you learn the mapping.
+  gen_ai_normalizer:
+    sources:
+      - name: openllmetry
+
+  # The normalizer renames attributes, not shapes or semantics. These
+  # statements fix the two gaps the lab actually sees:
+  #
+  # 1. traceloop.entity.name maps to gen_ai.agent.name for every span kind.
+  #    On a tool span the entity name is the tool, so copy it to
+  #    gen_ai.tool.name and drop the misleading agent name.
+  # 2. There is no gen_ai.workflow.name mapping. Carry the workflow name over
+  #    from the OpenLLMetry original on invoke_workflow spans.
+  #
+  # Note: contrib 0.159.0's set_semconv_span_name() only derives names for
+  # HTTP, RPC, database, and messaging spans. It does not rename gen_ai.*
+  # spans, so the lab does not use it here.
+  transform/semconv_corrections:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - set(span.attributes["gen_ai.tool.name"], span.attributes["gen_ai.agent.name"]) where span.attributes["gen_ai.operation.name"] == "execute_tool" and span.attributes["gen_ai.tool.name"] == nil and span.attributes["gen_ai.agent.name"] != nil
+          - delete_key(span.attributes, "gen_ai.agent.name") where span.attributes["gen_ai.operation.name"] == "execute_tool"
+          - set(span.attributes["gen_ai.workflow.name"], span.attributes["traceloop.workflow.name"]) where span.attributes["gen_ai.operation.name"] == "invoke_workflow" and span.attributes["traceloop.workflow.name"] != nil
+
+  # Collector-side redaction is a safety net, not the primary control. The
+  # better fix is not to collect sensitive content at all. These statements
+  # mask card-shaped numbers in the payload attributes. Nested or escaped JSON
+  # is only partially covered, which is why the lab also documents
+  # TRACELOOP_TRACE_CONTENT as the stronger switch.
+  transform/redact_sensitive_data:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - replace_pattern(span.attributes["gen_ai.tool.call.arguments"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.tool.call.arguments"] != nil
+          - replace_pattern(span.attributes["gen_ai.tool.call.result"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.tool.call.result"] != nil
+          - replace_pattern(span.attributes["gen_ai.input.messages"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.input.messages"] != nil
+          - replace_pattern(span.attributes["gen_ai.output.messages"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["gen_ai.output.messages"] != nil
+          - replace_pattern(span.attributes["traceloop.entity.input"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["traceloop.entity.input"] != nil
+          - replace_pattern(span.attributes["traceloop.entity.output"], "\\b\\d{4}-\\d{4}-\\d{4}-\\d{4}\\b", "****-****-****-****") where span.attributes["traceloop.entity.output"] != nil
+
+  # Key-name safety net for credentials that are not part of the GenAI
+  # payloads above. allow_all_keys keeps the default fail-closed behaviour
+  # from dropping every unrelated attribute.
+  redaction:
+    allow_all_keys: true
+    blocked_key_patterns:
+      - "^password$"
+      - "^secret$"
+      - "^api[_-]?key$"
+      - "^authorization$"
+    summary: info
+
+exporters:
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors:
+        [
+          gen_ai_normalizer,
+          transform/semconv_corrections,
+          transform/redact_sensitive_data,
+          redaction,
+          batch,
+        ]
+      exporters: [otlp, debug]

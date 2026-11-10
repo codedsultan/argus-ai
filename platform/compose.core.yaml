@@ -1,0 +1,94 @@
+name: argus-core
+
+services:
+  shop-api:
+    build:
+      context: ..
+      dockerfile: domain/shop_api/Dockerfile
+    environment:
+      OTEL_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_SERVICE_NAME: shop-api
+    ports:
+      - "${SHOP_API_PORT:-8080}:8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    depends_on:
+      - otel-collector
+
+  agent:
+    build:
+      context: ..
+      dockerfile: services/agent/Dockerfile
+    environment:
+      APPLICATION_ENDPOINT: shop-api:8080
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-azure/gpt-5.5}
+      API_KEY: ${API_KEY:-}
+      LLM_TLS_VERIFY: ${LLM_TLS_VERIFY:-true}
+      USE_VCR: ${USE_VCR:-true}
+      VCR_CASSETTE_DIR: /app/evals/cassettes
+      VCR_MATCH_THRESHOLD: ${VCR_MATCH_THRESHOLD:-0.85}
+      VCR_RECORD_MODE: ${VCR_RECORD_MODE:-new_episodes}
+      PUBLIC_MODE: ${PUBLIC_MODE:-false}
+      ARGUS_VERSION: ${ARGUS_VERSION:-dev}
+      GRAPH_RECURSION_LIMIT: ${GRAPH_RECURSION_LIMIT:-25}
+      HISTORY_MAX_TOKENS: ${HISTORY_MAX_TOKENS:-8000}
+      HISTORY_MIN_RECENT: ${HISTORY_MIN_RECENT:-2}
+      AI_SLOW_RESPONSE_MS: ${AI_SLOW_RESPONSE_MS:-0}
+      AI_RUNAWAY_ITERATIONS: ${AI_RUNAWAY_ITERATIONS:-0}
+      OTEL_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_METRICS_EXPORTER: "none"
+      OTEL_SERVICE_NAME: agent
+      TRACELOOP_BASE_URL: http://otel-collector:4318
+      TRACELOOP_METRICS_ENABLED: "false"
+      TRACELOOP_TELEMETRY: ${TRACELOOP_TELEMETRY:-false}
+      TRACELOOP_TRACE_CONTENT: ${TRACELOOP_TRACE_CONTENT:-true}
+    ports:
+      - "${AGENT_PORT:-8010}:8010"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8010/healthz')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    depends_on:
+      shop-api:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.159.0
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./collector/config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "${JAEGER_PORT:-16686}:16686"

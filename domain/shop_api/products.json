@@ -1,0 +1,148 @@
+[
+  {
+    "id": "0PUK6V6EV0",
+    "name": "Aurora Capture Module",
+    "description": "A compact camera module for capturing bright planets and lunar craters through a small telescope. It includes a USB-C connection, an adjustable gain control, and a lightweight mounting sleeve.",
+    "picture": "AuroraCaptureModule.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 175,
+      "nanos": 0
+    },
+    "categories": [
+      "accessories",
+      "telescopes"
+    ]
+  },
+  {
+    "id": "1YMWWN1N4O",
+    "name": "Horizon Travel Scope",
+    "description": "A 50 mm refractor built for travel and solar observation. The kit includes a glass solar filter, a 20 mm eyepiece, a compact tripod, and a padded carry bag.",
+    "picture": "HorizonTravelScope.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 129,
+      "nanos": 950000000
+    },
+    "categories": [
+      "telescopes",
+      "travel"
+    ]
+  },
+  {
+    "id": "2ZYFJ3GM2N",
+    "name": "Ridgeview 8x42 Binoculars",
+    "description": "A rugged roof-prism binocular for birds, trails, and wide-field sky scanning. The 8x magnification and 42 mm objective give a bright, stable view in low light.",
+    "picture": "Ridgeview842Binoculars.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 209,
+      "nanos": 950000000
+    },
+    "categories": [
+      "binoculars"
+    ]
+  },
+  {
+    "id": "66VCHSJNUP",
+    "name": "Starfinder 70 Refractor",
+    "description": "A beginner-friendly 70 mm refractor with a smartphone mount and a red-dot finder. The included app helps you locate bright stars, planets, and the Moon.",
+    "picture": "Starfinder70Refractor.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 349,
+      "nanos": 950000000
+    },
+    "categories": [
+      "telescopes"
+    ]
+  },
+  {
+    "id": "6E92ZMYYFZ",
+    "name": "SunShield Solar Filter",
+    "description": "A full-aperture solar filter for 8-inch telescopes. The aluminum cell and glass film are designed for safe visual observation of the Sun.",
+    "picture": "SunShieldSolarFilter.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 69,
+      "nanos": 950000000
+    },
+    "categories": [
+      "accessories",
+      "telescopes"
+    ]
+  },
+  {
+    "id": "9SIQT8TOJO",
+    "name": "Deep Field Optical Tube",
+    "description": "A fast 8-inch imaging tube for wide-field astrophotography. The dual-speed focuser and cooled mirror cell are built for long exposures.",
+    "picture": "DeepFieldOpticalTube.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 3599,
+      "nanos": 0
+    },
+    "categories": [
+      "accessories",
+      "telescopes",
+      "assembly"
+    ]
+  },
+  {
+    "id": "HQTGWGPNH4",
+    "name": "The Night Watcher's Almanac",
+    "description": "A pocket guide to the seasonal sky, with star charts, observing notes, and a short history of the constellations.",
+    "picture": "NightWatchersAlmanac.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 0,
+      "nanos": 990000000
+    },
+    "categories": [
+      "books"
+    ]
+  },
+  {
+    "id": "L9ECAV7KIM",
+    "name": "Optics Care Kit",
+    "description": "A cleaning kit for lenses, filters, and camera sensors. Includes a blower, brush, microfiber cloths, and a bottle of lens cleaning fluid.",
+    "picture": "OpticsCareKit.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 21,
+      "nanos": 950000000
+    },
+    "categories": [
+      "accessories"
+    ]
+  },
+  {
+    "id": "LS4PSXUNUM",
+    "name": "NightTrail Red Lamp",
+    "description": "A red-light headlamp with a dimmable beam, a magnetic mount, and a USB-C rechargeable battery. Designed to preserve night vision.",
+    "picture": "NightTrailRedLamp.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 57,
+      "nanos": 80000000
+    },
+    "categories": [
+      "accessories",
+      "flashlights"
+    ]
+  },
+  {
+    "id": "OLJCESPC7Z",
+    "name": "TrailScope 60 Travel Refractor",
+    "description": "A compact 60 mm refractor for travel and backyard observing. The kit includes a tripod, two eyepieces, and a carry case.",
+    "picture": "TrailScope60TravelRefractor.jpg",
+    "priceUsd": {
+      "currencyCode": "USD",
+      "units": 101,
+      "nanos": 960000000
+    },
+    "categories": [
+      "telescopes"
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: argus-core
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./deploy/public/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true

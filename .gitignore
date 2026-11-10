@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local configuration and secrets
+.env
+.env.local
+
+# Newly recorded cassettes are not committed by default; curated fixtures are.
+evals/cassettes/*.record.yaml
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+.obsidian/
